@@ -10,7 +10,6 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Assurer que les scrapers sont trouvables
 sys.path.insert(0, str(Path(__file__).parent))
 
 from scrapers.france_amf import scrape_france
@@ -21,46 +20,44 @@ DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 # Liste ISIN cibles (actions PEA principales).
-# Étendre cette liste pour suivre plus d'entreprises.
+# Le nom doit matcher celui utilisé par swaoo.com dans ses URLs /societes/NOM/
 TARGETS = [
-    # France - FR tickers sur Yahoo Finance = .PA
-    {"isin": "FR0000120271", "name": "TotalEnergies", "ticker": "TTE.PA", "country": "FR", "sector": "Énergie"},
-    {"isin": "FR0000131104", "name": "BNP Paribas", "ticker": "BNP.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "FR0000120578", "name": "Sanofi", "ticker": "SAN.PA", "country": "FR", "sector": "Santé"},
-    {"isin": "FR0000121014", "name": "LVMH", "ticker": "MC.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000121972", "name": "Schneider Electric", "ticker": "SU.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000120073", "name": "Air Liquide", "ticker": "AI.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000125338", "name": "Capgemini", "ticker": "CAP.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000051807", "name": "Teleperformance", "ticker": "TEP.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000120693", "name": "Pernod Ricard", "ticker": "RI.PA", "country": "FR", "sector": "Alimentation"},
-    {"isin": "FR0014003TT8", "name": "Dassault Systèmes", "ticker": "DSY.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000120321", "name": "L'Oréal", "ticker": "OR.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000052292", "name": "Hermès", "ticker": "RMS.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000121485", "name": "Kering", "ticker": "KER.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000045072", "name": "Crédit Agricole", "ticker": "ACA.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "FR0000120628", "name": "AXA", "ticker": "CS.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "NL0000235190", "name": "Airbus", "ticker": "AIR.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000073272", "name": "Safran", "ticker": "SAF.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR001400AJ45", "name": "Michelin", "ticker": "ML.PA", "country": "FR", "sector": "Automobile"},
-    {"isin": "FR0000125486", "name": "Vinci", "ticker": "DG.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000133308", "name": "Orange", "ticker": "ORA.PA", "country": "FR", "sector": "Télécoms"},
-    {"isin": "FR0010220475", "name": "Publicis", "ticker": "PUB.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "NL0000235190", "name": "STMicroelectronics", "ticker": "STMPA.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000121667", "name": "EssilorLuxottica", "ticker": "EL.PA", "country": "FR", "sector": "Santé"},
-    {"isin": "FR0000120172", "name": "Carrefour", "ticker": "CA.PA", "country": "FR", "sector": "Alimentation"},
-    {"isin": "FR0000130577", "name": "Danone", "ticker": "BN.PA", "country": "FR", "sector": "Alimentation"},
+    {"isin": "FR0000120271", "name": "TotalEnergies", "swaoo_name": "TOTALENERGIES", "ticker": "TTE.PA", "country": "FR", "sector": "Énergie"},
+    {"isin": "FR0000131104", "name": "BNP Paribas", "swaoo_name": "BNP+PARIBAS", "ticker": "BNP.PA", "country": "FR", "sector": "Finance"},
+    {"isin": "FR0000120578", "name": "Sanofi", "swaoo_name": "SANOFI", "ticker": "SAN.PA", "country": "FR", "sector": "Santé"},
+    {"isin": "FR0000121014", "name": "LVMH", "swaoo_name": "LVMH", "ticker": "MC.PA", "country": "FR", "sector": "Luxe"},
+    {"isin": "FR0000121972", "name": "Schneider Electric", "swaoo_name": "SCHNEIDER+ELECTRIC", "ticker": "SU.PA", "country": "FR", "sector": "Industrie"},
+    {"isin": "FR0000120073", "name": "Air Liquide", "swaoo_name": "AIR+LIQUIDE", "ticker": "AI.PA", "country": "FR", "sector": "Industrie"},
+    {"isin": "FR0000125338", "name": "Capgemini", "swaoo_name": "CAPGEMINI", "ticker": "CAP.PA", "country": "FR", "sector": "Technologie"},
+    {"isin": "FR0000051807", "name": "Teleperformance", "swaoo_name": "TELEPERFORMANCE", "ticker": "TEP.PA", "country": "FR", "sector": "Technologie"},
+    {"isin": "FR0000120693", "name": "Pernod Ricard", "swaoo_name": "PERNOD+RICARD", "ticker": "RI.PA", "country": "FR", "sector": "Alimentation"},
+    {"isin": "FR0014003TT8", "name": "Dassault Systèmes", "swaoo_name": "DASSAULT+SYSTEMES", "ticker": "DSY.PA", "country": "FR", "sector": "Technologie"},
+    {"isin": "FR0000120321", "name": "L'Oréal", "swaoo_name": "L+OREAL", "ticker": "OR.PA", "country": "FR", "sector": "Luxe"},
+    {"isin": "FR0000052292", "name": "Hermès", "swaoo_name": "HERMES+INTERNATIONAL", "ticker": "RMS.PA", "country": "FR", "sector": "Luxe"},
+    {"isin": "FR0000121485", "name": "Kering", "swaoo_name": "KERING", "ticker": "KER.PA", "country": "FR", "sector": "Luxe"},
+    {"isin": "FR0000045072", "name": "Crédit Agricole", "swaoo_name": "CREDIT+AGRICOLE", "ticker": "ACA.PA", "country": "FR", "sector": "Finance"},
+    {"isin": "FR0000120628", "name": "AXA", "swaoo_name": "AXA", "ticker": "CS.PA", "country": "FR", "sector": "Finance"},
+    {"isin": "NL0000235190", "name": "Airbus", "swaoo_name": "AIRBUS", "ticker": "AIR.PA", "country": "FR", "sector": "Industrie"},
+    {"isin": "FR0000073272", "name": "Safran", "swaoo_name": "SAFRAN", "ticker": "SAF.PA", "country": "FR", "sector": "Industrie"},
+    {"isin": "FR001400AJ45", "name": "Michelin", "swaoo_name": "MICHELIN", "ticker": "ML.PA", "country": "FR", "sector": "Automobile"},
+    {"isin": "FR0000125486", "name": "Vinci", "swaoo_name": "VINCI", "ticker": "DG.PA", "country": "FR", "sector": "Industrie"},
+    {"isin": "FR0000133308", "name": "Orange", "swaoo_name": "ORANGE", "ticker": "ORA.PA", "country": "FR", "sector": "Télécoms"},
+    {"isin": "FR0010220475", "name": "Publicis", "swaoo_name": "PUBLICIS+GROUPE", "ticker": "PUB.PA", "country": "FR", "sector": "Technologie"},
+    {"isin": "FR0000121667", "name": "EssilorLuxottica", "swaoo_name": "ESSILORLUXOTTICA", "ticker": "EL.PA", "country": "FR", "sector": "Santé"},
+    {"isin": "FR0000120172", "name": "Carrefour", "swaoo_name": "CARREFOUR", "ticker": "CA.PA", "country": "FR", "sector": "Alimentation"},
+    {"isin": "FR0000130577", "name": "Danone", "swaoo_name": "DANONE", "ticker": "BN.PA", "country": "FR", "sector": "Alimentation"},
 ]
+
 
 def main():
     print("=" * 60)
     print(f"INSIDER PEA - Mise à jour {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    # Fenêtre temporelle pour les achats d'initiés
     days_back = 120
     cutoff = datetime.now() - timedelta(days=days_back)
 
-    # 1. Scraping France AMF via lestransactions.fr
+    # 1. Scraping France
     print(f"\n[1/3] Scraping France AMF (fenêtre: {days_back} jours)...")
     all_insider_tx = []
     fr_targets = [t for t in TARGETS if t["country"] == "FR"]
@@ -68,8 +65,12 @@ def main():
     for i, target in enumerate(fr_targets, 1):
         print(f"  [{i}/{len(fr_targets)}] {target['name']}... ", end="", flush=True)
         try:
-            txs = scrape_france(target["isin"], cutoff)
-            # Enrichir avec les infos de la cible
+            # Passer le nom swaoo pour utiliser /societes/NOM/
+            txs = scrape_france(
+                target["isin"],
+                cutoff,
+                company_name=target.get("swaoo_name") or target["name"]
+            )
             for tx in txs:
                 tx["ticker"] = target["ticker"]
                 tx["country"] = target["country"]
@@ -106,10 +107,9 @@ def main():
             company_data[key] = {**target, "quote": None}
             print(f"  ✗ {target['name']}: {e}")
 
-    # 3. Calcul des scores et agrégation par entreprise
+    # 3. Calcul des scores
     print("\n[3/3] Calcul des scores...")
     
-    # Grouper les achats par ISIN
     purchases_by_isin = {}
     for tx in purchases:
         isin = tx["isin"]
@@ -120,8 +120,6 @@ def main():
     recommendations = []
     for isin, txs in purchases_by_isin.items():
         if isin not in company_data:
-            # Cette ISIN n'est pas dans nos cibles, on l'ajoute quand même
-            # avec les infos disponibles dans la première transaction
             first_tx = txs[0]
             company_data[isin] = {
                 "isin": isin,
@@ -163,10 +161,8 @@ def main():
             "quote": co.get("quote"),
         })
 
-    # Trier par score décroissant
     recommendations.sort(key=lambda r: r["total_score"], reverse=True)
 
-    # 4. Écriture du JSON final
     output = {
         "generated_at": datetime.now().isoformat(),
         "transactions_count": len(purchases),
@@ -182,7 +178,6 @@ def main():
     print(f"   Recommandations: {len(recommendations)}")
     print(f"   Transactions: {len(purchases)}")
 
-    # Stats rapides
     strong = [r for r in recommendations if r["total_score"] >= 85]
     buys = [r for r in recommendations if 65 <= r["total_score"] < 85]
     print(f"   🟢 Achat Fort: {len(strong)}")
