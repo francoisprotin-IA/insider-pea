@@ -44,10 +44,23 @@ ISIN_TO_TICKER = {
     "FR0000066755": "PIG.PA",       # Haulotte
     "FR0013344173": "RBO.PA",       # Roche Bobois
     "FR0000062739": "ABCA.PA",      # ABC Arbitrage
+    "FR0000121709": "SK.PA",        # SEB (Groupe SEB)
+    "FR0014000MR3": "EXENS.PA",     # Exosens
+    "FR0004040608": "ABCA.PA",      # ABC Arbitrage (ISIN alternatif)
+    "FR0000074148": "FNAC.PA",      # Fnac Darty
+    "FR0000125007": "SGO.PA",       # Saint-Gobain
+    "FR0000130809": "SU.PA",        # Société Générale
+    "FR0000120404": "ENGI.PA",      # Accor (ex Engie)
+    "FR0010208488": "ENGI.PA",      # Engie
+    "FR0000053225": "DAST.PA",      # Dassault Aviation
+    "FR0000184798": "GDS.PA",       # Gecina
+    "FR0010040865": "GFC.PA",       # Coface
+    "FR0000035370": "GTT.PA",       # GTT
     # International
     "BE0974293251": "ABI.BR",       # AB InBev
     "NL0011821202": "INGA.AS",      # ING
     "NL0010273215": "ASML.AS",      # ASML
+    "IT0005678104": "ALKLN.PA",     # Kaleon (Euronext Growth Paris)
 }
 
 
@@ -112,7 +125,7 @@ def main():
 
     purchases_by_isin = {}
     for tx in purchases:
-        if tx["amount"] < 1000:  # Filtrer le bruit
+        if (tx.get("amount") or 0) < 1000:  # Filtrer le bruit (< 1k€)
             continue
         isin = tx["isin"]
         if isin not in purchases_by_isin:
@@ -129,9 +142,9 @@ def main():
         verdict = compute_verdict(total)
 
         unique_insiders = len(set(tx["insider"] for tx in txs))
-        total_amount = sum(tx["amount"] for tx in txs)
+        total_amount = sum(tx.get("amount", 0) or 0 for tx in txs)
         last_buy = max(tx["date"] for tx in txs)
-        top_tx = max(txs, key=lambda t: t["amount"])
+        top_tx = max(txs, key=lambda t: t.get("amount", 0) or 0)
 
         recommendations.append({
             "isin": isin,
