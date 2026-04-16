@@ -74,7 +74,7 @@ def main():
 
     # 1. Scraping global (toutes entreprises)
     print(f"\n[1/3] Scraping AMF - {days_back} derniers jours (toutes entreprises)...")
-    all_transactions = scrape_all_recent(days_back=days_back, max_pages=40)
+    all_transactions = scrape_all_recent(days_back=days_back, max_pages=80)
     print(f"\nTotal : {len(all_transactions)} transactions récupérées")
 
     purchases = [t for t in all_transactions if t["is_purchase"]]
