@@ -1,9 +1,0 @@
-{
-  "generated_at": "2026-04-16T18:00:00",
-  "transactions_count": 0,
-  "companies_tracked": 25,
-  "recommendations": [],
-  "transactions": [],
-  "company_data": {},
-  "_note": "Ce fichier sera remplacé par le premier run du workflow GitHub Actions. Va dans l'onglet Actions → 'Mise à jour quotidienne des données' → 'Run workflow' pour lancer le premier scraping."
-}
