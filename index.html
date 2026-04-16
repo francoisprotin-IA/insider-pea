@@ -154,7 +154,7 @@ function App(){
     return allTransactions.filter(t => t.date >= cutoffDate);
   }, [allTransactions, cutoffDate]);
 
-  const periodPurchases = useMemo(() => filteredTx.filter(t => t.is_purchase && t.amount >= 1000), [filteredTx]);
+  const periodPurchases = useMemo(() => filteredTx.filter(t => t.is_purchase && (t.amount||0) >= 1000), [filteredTx]);
   const periodSells = useMemo(() => filteredTx.filter(t => t.is_sell), [filteredTx]);
 
   // Recalculer les recommandations pour la période choisie
@@ -172,9 +172,9 @@ function App(){
       const total = Math.max(insScore, insScore + tech.adj);
       const verdict = getVerdict(total);
       const uniqueInsiders = new Set(txs.map(t=>t.insider)).size;
-      const totalAmount = txs.reduce((s,t)=>s+t.amount,0);
+      const totalAmount = txs.reduce((s,t)=>s+(t.amount||0),0);
       const lastBuy = txs.reduce((max,t)=>t.date>max?t.date:max, "");
-      const topTx = txs.reduce((max,t)=>t.amount>max.amount?t:max, txs[0]);
+      const topTx = txs.reduce((max,t)=>(t.amount||0)>(max.amount||0)?t:max, txs[0]);
       
       return {
         isin, name: co.name, ticker: co.ticker,
