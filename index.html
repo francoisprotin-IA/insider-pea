@@ -30,11 +30,11 @@ const {useState,useEffect,useMemo,useCallback}=React;
 
 const T={bg:"#04060b",card:"#080d16",border:"#12192a",gold:"#d4a74a",goldDim:"#8b6c23",goldBg:"rgba(212,167,74,0.06)",text:"#b8bfcc",dim:"#4e5768",bright:"#eaecf0",green:"#34d399",red:"#f87171",yellow:"#facc15",blue:"#60a5fa",purple:"#a78bfa",mono:"'JetBrains Mono',monospace"};
 
-const CTRY={FR:{n:"France",f:"\u{1F1EB}\u{1F1F7}"},DE:{n:"Allemagne",f:"\u{1F1E9}\u{1F1EA}"},NL:{n:"Pays-Bas",f:"\u{1F1F3}\u{1F1F1}"},IT:{n:"Italie",f:"\u{1F1EE}\u{1F1F9}"},ES:{n:"Espagne",f:"\u{1F1EA}\u{1F1F8}"},BE:{n:"Belgique",f:"\u{1F1E7}\u{1F1EA}"},SE:{n:"Su\u00e8de",f:"\u{1F1F8}\u{1F1EA}"},DK:{n:"Danemark",f:"\u{1F1E9}\u{1F1F0}"},FI:{n:"Finlande",f:"\u{1F1EB}\u{1F1EE}"},NO:{n:"Norv\u00e8ge",f:"\u{1F1F3}\u{1F1F4}"}};
+const CTRY={FR:{n:"France",f:"🇫🇷"},DE:{n:"Allemagne",f:"🇩🇪"},NL:{n:"Pays-Bas",f:"🇳🇱"},IT:{n:"Italie",f:"🇮🇹"},ES:{n:"Espagne",f:"🇪🇸"},BE:{n:"Belgique",f:"🇧🇪"},SE:{n:"Suède",f:"🇸🇪"},DK:{n:"Danemark",f:"🇩🇰"},FI:{n:"Finlande",f:"🇫🇮"},NO:{n:"Norvège",f:"🇳🇴"}};
 
-const fmt=n=>{if(n==null||isNaN(n))return"\u2014";if(n>=1e9)return"\u20AC"+(n/1e9).toFixed(1)+"Md";if(n>=1e6)return"\u20AC"+(n/1e6).toFixed(1)+"M";if(n>=1e3)return"\u20AC"+(n/1e3).toFixed(0)+"k";return"\u20AC"+n.toFixed(0)};
-const fmtP=p=>p==null?"\u2014":(p>=0?"+":"")+p.toFixed(1)+"%";
-const fmtC=(n,cur)=>{if(n==null||isNaN(n))return"\u2014";const s=cur==="USD"?"$":cur==="SEK"?"kr ":cur==="NOK"?"kr ":cur==="DKK"?"kr ":"\u20AC";return s+n.toFixed(2)};
+const fmt=n=>{if(n==null||isNaN(n))return"—";if(n>=1e9)return"€"+(n/1e9).toFixed(1)+"Md";if(n>=1e6)return"€"+(n/1e6).toFixed(1)+"M";if(n>=1e3)return"€"+(n/1e3).toFixed(0)+"k";return"€"+n.toFixed(0)};
+const fmtP=p=>p==null?"—":(p>=0?"+":"")+p.toFixed(1)+"%";
+const fmtC=(n,cur)=>{if(n==null||isNaN(n))return"—";const s=cur==="USD"?"$":cur==="SEK"?"kr ":cur==="NOK"?"kr ":cur==="DKK"?"kr ":"€";return s+n.toFixed(2)};
 
 function Stat({label,value,sub,color}){return <div style={{background:T.card,borderRadius:12,padding:"14px 18px",border:"1px solid "+T.border,flex:"1 1 140px",minWidth:130}}><div style={{fontSize:9.5,color:T.dim,textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:4,fontWeight:600}}>{label}</div><div style={{fontSize:22,fontWeight:800,color:color||T.bright,fontFamily:T.mono}}>{value}</div>{sub&&<div style={{fontSize:10,color:T.dim,marginTop:2}}>{sub}</div>}</div>}
 
@@ -54,9 +54,8 @@ function App(){
     setLoading(true);
     setError(null);
     try {
-      // Cache-bust pour toujours avoir la version la plus récente
       const response = await fetch("data/latest.json?t=" + Date.now());
-      if (!response.ok) throw new Error("Fichier data/latest.json introuvable. Le workflow GitHub Actions a-t-il d\u00e9j\u00e0 tourn\u00e9 ?");
+      if (!response.ok) throw new Error("Fichier data/latest.json introuvable. Le workflow GitHub Actions a-t-il déjà tourné ?");
       const json = await response.json();
       setData(json);
     } catch(e) {
@@ -88,57 +87,57 @@ function App(){
 
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:18}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,"+T.gold+","+T.goldDim+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{"\u{1F4CA}"}</div>
+        <div style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,"+T.gold+","+T.goldDim+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📊</div>
         <div>
-          <h1 style={{fontSize:20,fontWeight:800,color:T.bright,letterSpacing:"-0.03em"}}>Insider <span style={{color:T.gold}}>PEA</span> {"\u00b7"} Dashboard personnel</h1>
+          <h1 style={{fontSize:20,fontWeight:800,color:T.bright,letterSpacing:"-0.03em"}}>Insider <span style={{color:T.gold}}>PEA</span> · Dashboard personnel</h1>
           <p style={{fontSize:10.5,color:T.dim}}>
-            Donn\u00e9es AMF + Yahoo Finance {"\u00b7"} {generatedAt ? "Mise \u00e0 jour " + generatedAt.toLocaleString("fr-FR") : "En cours de chargement"}
+            Données AMF + Yahoo Finance · {generatedAt ? "Mise à jour " + generatedAt.toLocaleString("fr-FR") : "En cours de chargement"}
           </p>
         </div>
       </div>
       <button onClick={loadData} disabled={loading} style={{padding:"6px 14px",borderRadius:7,border:"1px solid "+T.border,background:T.card,color:loading?T.dim:T.gold,fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
-        <span className={loading?"spin":""}>{"\u21BB"}</span> {loading ? "Chargement..." : "Recharger"}
+        <span className={loading?"spin":""}>↻</span> {loading ? "Chargement..." : "Recharger"}
       </button>
     </div>
 
     {loading && <div style={{padding:"40px",textAlign:"center",color:T.gold}}>
-      <div className="spin" style={{fontSize:24}}>{"\u21BB"}</div>
-      <div style={{marginTop:10,fontSize:12}}>Chargement des donn\u00e9es...</div>
+      <div className="spin" style={{fontSize:24}}>↻</div>
+      <div style={{marginTop:10,fontSize:12}}>Chargement des données...</div>
     </div>}
 
     {error && <div style={{padding:"16px 20px",background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:9,marginBottom:14,fontSize:12,color:T.red,lineHeight:1.7}}>
-      <b>{"\u26A0\uFE0F"} Erreur :</b> {error}<br/><br/>
-      <b>C'est normal au premier lancement.</b> Va dans l'onglet <b>Actions</b> de ton repo GitHub et clique sur "Run workflow" pour g\u00e9n\u00e9rer le premier fichier <code>data/latest.json</code>.
+      <b>⚠️ Erreur :</b> {error}<br/><br/>
+      <b>C'est normal au premier lancement.</b> Va dans l'onglet <b>Actions</b> de ton repo GitHub et clique sur "Run workflow" pour générer le premier fichier <code>data/latest.json</code>.
     </div>}
 
     {data && <>
       <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:14}}>
         <Stat label="Transactions" value={data.transactions_count || 0}/>
         <Stat label="Entreprises suivies" value={data.companies_tracked || 0}/>
-        <Stat label="Achat Fort" value={strong} sub="score \u226585" color={T.green}/>
+        <Stat label="Achat Fort" value={strong} sub="score ≥85" color={T.green}/>
         <Stat label="Achat" value={buys} sub="65-84" color="#4ade80"/>
-        <Stat label="Int\u00e9ressant" value={interesting} sub="45-64" color={T.yellow}/>
+        <Stat label="Intéressant" value={interesting} sub="45-64" color={T.yellow}/>
       </div>
 
       <div style={{background:T.card,borderRadius:10,border:"1px solid "+T.border,padding:"12px 16px",marginBottom:14}}>
         <div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:10}}>
           {Object.entries(CTRY).filter(([k]) => recos.some(r => r.country === k)).map(([k,v]) =>
             <button key={k} onClick={() => toggleC(k)} style={{padding:"3px 9px",borderRadius:6,border:"1px solid "+(ctrs.includes(k) ? T.gold + "50" : T.border),background:ctrs.includes(k) ? T.goldBg : "transparent",color:ctrs.includes(k) ? T.gold : T.dim,fontSize:10.5}}>{v.f} {v.n}</button>)}
-          {ctrs.length > 0 && <button onClick={() => setCtrs([])} style={{padding:"3px 9px",borderRadius:6,border:"1px solid "+T.red+"30",background:"rgba(248,113,113,0.08)",color:T.red,fontSize:9}}>{"\u2715"}</button>}
+          {ctrs.length > 0 && <button onClick={() => setCtrs([])} style={{padding:"3px 9px",borderRadius:6,border:"1px solid "+T.red+"30",background:"rgba(248,113,113,0.08)",color:T.red,fontSize:9}}>✕</button>}
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:7,alignItems:"center"}}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={"\u{1F50D} Recherche..."} style={{flex:"1 1 160px",padding:"7px 11px",borderRadius:6,border:"1px solid "+T.border,background:"rgba(0,0,0,0.3)",color:T.text,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Recherche..." style={{flex:"1 1 160px",padding:"7px 11px",borderRadius:6,border:"1px solid "+T.border,background:"rgba(0,0,0,0.3)",color:T.text,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
           <select value={minScore} onChange={e => setMinScore(Number(e.target.value))} style={{padding:"7px 9px",borderRadius:6,border:"1px solid "+T.border,background:"rgba(0,0,0,0.3)",color:T.text,fontSize:11.5,outline:"none"}}>
             <option value={0}>Tous scores</option>
-            <option value={45}>{"\u2265"}45 (Int\u00e9ressant)</option>
-            <option value={65}>{"\u2265"}65 (Achat)</option>
-            <option value={85}>{"\u2265"}85 (Achat Fort)</option>
+            <option value={45}>≥45 (Intéressant)</option>
+            <option value={65}>≥65 (Achat)</option>
+            <option value={85}>≥85 (Achat Fort)</option>
           </select>
         </div>
       </div>
 
       <div style={{marginBottom:12}}>
-        <Tabs tabs={[{id:"reco",icon:"\u2B50",label:"Recommandations"},{id:"tx",icon:"\u{1F4CB}",label:"Transactions"},{id:"method",icon:"\u{1F9EE}",label:"M\u00e9thodologie"}]} active={tab} onChange={setTab}/>
+        <Tabs tabs={[{id:"reco",icon:"⭐",label:"Recommandations"},{id:"tx",icon:"📋",label:"Transactions"},{id:"method",icon:"🧮",label:"Méthodologie"}]} active={tab} onChange={setTab}/>
       </div>
 
       {tab === "reco" && <div style={{display:"grid",gap:8}}>
@@ -155,7 +154,7 @@ function App(){
                   <span style={{fontWeight:700,color:T.bright,fontSize:13}}>{r.name}</span>
                 </div>
                 <div style={{fontSize:9.5,color:T.dim,marginTop:1}}>
-                  {r.sector} {"\u00b7"} {r.tx_count} achats {"\u00b7"} {r.unique_insiders} insider{r.unique_insiders>1?"s":""} {"\u00b7"} {fmt(r.total_amount)}
+                  {r.sector} · {r.tx_count} achats · {r.unique_insiders} insider{r.unique_insiders>1?"s":""} · {fmt(r.total_amount)}
                 </div>
               </div>
               <div style={{flex:"0 1 180px",display:"flex",gap:6,alignItems:"center"}}>
@@ -174,37 +173,37 @@ function App(){
                 <div style={{fontFamily:T.mono,fontSize:20,fontWeight:800,color:r.verdict.color}}>{r.total_score}</div>
                 <span style={{padding:"3px 10px",borderRadius:6,background:r.verdict.color+"10",border:"1px solid "+r.verdict.color+"25",color:r.verdict.color,fontSize:9.5,fontWeight:700,whiteSpace:"nowrap"}}>{r.verdict.icon} {r.verdict.label}</span>
               </div>
-              <span style={{color:T.dim,fontSize:14,transform:isExp?"rotate(180deg)":"none",transition:"transform 0.2s"}}>{"\u25BE"}</span>
+              <span style={{color:T.dim,fontSize:14,transform:isExp?"rotate(180deg)":"none",transition:"transform 0.2s"}}>▾</span>
             </div>
             {isExp && <div style={{padding:"0 16px 16px",borderTop:"1px solid "+T.border}}>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12,marginTop:12}}>
                 <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:12}}>
-                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:T.green,fontWeight:700}}>{"\u{1F4CA}"} Signal Insider {"\u2014"} {r.insider_score}/100</h4>
+                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:T.green,fontWeight:700}}>📊 Signal Insider — {r.insider_score}/100</h4>
                   <div style={{fontSize:11.5,lineHeight:2}}>
-                    <div>Achats: <b style={{color:T.bright}}>{r.tx_count}</b> {r.tx_count>=3?"\u{1F525} Cluster":r.tx_count>=2?"\u2705 Multiple":"\u2014 Isol\u00e9"}</div>
-                    <div>Insiders: <b style={{color:T.bright}}>{r.unique_insiders}</b> {r.unique_insiders>=2?"\u2705":""}</div>
+                    <div>Achats: <b style={{color:T.bright}}>{r.tx_count}</b> {r.tx_count>=3?"🔥 Cluster":r.tx_count>=2?"✅ Multiple":"— Isolé"}</div>
+                    <div>Insiders: <b style={{color:T.bright}}>{r.unique_insiders}</b> {r.unique_insiders>=2?"✅":""}</div>
                     <div>Volume: <b style={{color:T.green}}>{fmt(r.total_amount)}</b></div>
                     <div>Top: <b style={{color:T.bright}}>{r.top_insider}</b></div>
-                    <div>R\u00f4le: <b>{r.top_role}</b></div>
+                    <div>Rôle: <b>{r.top_role}</b></div>
                     <div>Dernier achat: <b>{r.last_buy}</b></div>
                   </div>
                 </div>
                 <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:12}}>
-                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:r.tech_adj>=0?T.green:T.red,fontWeight:700}}>{"\u{1F6E1}\uFE0F"} Garde Tech {"\u2014"} {r.tech_adj>=0?"+":""}{r.tech_adj}</h4>
+                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:r.tech_adj>=0?T.green:T.red,fontWeight:700}}>🛡️ Garde Tech — {r.tech_adj>=0?"+":""}{r.tech_adj}</h4>
                   <div style={{fontSize:11.5,lineHeight:2}}>
                     {r.tech_detail.rsi != null && <div>RSI: <b style={{color:r.tech_detail.rsi<=30?T.green:r.tech_detail.rsi>=70?T.red:T.text}}>{r.tech_detail.rsi.toFixed(0)}</b></div>}
-                    {r.tech_detail.nearLow52 != null && <div>Bas 52s: <b style={{color:r.tech_detail.nearLow52?T.green:T.text}}>{r.tech_detail.nearLow52?"Oui \u2705":"Non"}</b></div>}
-                    {r.tech_detail.aboveSma200 != null && <div>&gt; SMA200: <b style={{color:r.tech_detail.aboveSma200?T.green:T.red}}>{r.tech_detail.aboveSma200?"Oui":"Non \u26A0\uFE0F"}</b></div>}
+                    {r.tech_detail.nearLow52 != null && <div>Bas 52s: <b style={{color:r.tech_detail.nearLow52?T.green:T.text}}>{r.tech_detail.nearLow52?"Oui ✅":"Non"}</b></div>}
+                    {r.tech_detail.aboveSma200 != null && <div>&gt; SMA200: <b style={{color:r.tech_detail.aboveSma200?T.green:T.red}}>{r.tech_detail.aboveSma200?"Oui":"Non ⚠️"}</b></div>}
                     <div style={{marginTop:6,fontSize:10,color:T.dim,fontStyle:"italic"}}>Score = max(insider, insider+tech)</div>
                   </div>
                 </div>
                 {q && <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:12}}>
-                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:T.blue,fontWeight:700}}>{"\u{1F4C8}"} Potentiel analystes</h4>
+                  <h4 style={{margin:"0 0 8px",fontSize:11.5,color:T.blue,fontWeight:700}}>📈 Potentiel analystes</h4>
                   <div style={{fontSize:11.5,lineHeight:2}}>
                     <div>Cours: <b style={{color:T.bright}}>{fmtC(q.currentPrice, q.currency)}</b></div>
                     <div>Objectif 12M: <b>{fmtC(q.targetMean, q.currency)}</b></div>
                     <div>Potentiel: <b style={{color:q.upside>=15?T.green:q.upside>=0?T.yellow:T.red}}>{fmtP(q.upside)}</b></div>
-                    <div>Analystes: <b>{q.numAnalysts || "\u2014"}</b></div>
+                    <div>Analystes: <b>{q.numAnalysts || "—"}</b></div>
                     {q.pe && <div>P/E: <b>{q.pe.toFixed(1)}</b></div>}
                     {q.dividendYield && <div>Div: <b style={{color:q.dividendYield>=4?T.green:T.text}}>{q.dividendYield.toFixed(1)}%</b></div>}
                   </div>
@@ -221,11 +220,11 @@ function App(){
             <thead><tr>
               <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Date</th>
               <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Pays</th>
-              <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Soci\u00e9t\u00e9</th>
+              <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Société</th>
               <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Insider</th>
-              <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>R\u00f4le</th>
+              <th style={{textAlign:"left",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Rôle</th>
               <th style={{textAlign:"right",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Prix</th>
-              <th style={{textAlign:"right",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Quantit\u00e9</th>
+              <th style={{textAlign:"right",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Quantité</th>
               <th style={{textAlign:"right",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Montant</th>
               <th style={{textAlign:"center",padding:"9px 11px",color:T.dim,fontWeight:600,fontSize:9.5,textTransform:"uppercase",letterSpacing:"0.1em",borderBottom:"1px solid "+T.border,background:"rgba(0,0,0,0.3)"}}>Lien</th>
             </tr></thead>
@@ -234,64 +233,61 @@ function App(){
                 return <tr key={i} style={{borderBottom:"1px solid rgba(255,255,255,0.02)",background:i%2?"rgba(255,255,255,0.005)":"transparent"}}>
                   <td style={{padding:"9px 11px",fontFamily:T.mono,fontSize:10,color:T.dim}}>{t.date}</td>
                   <td style={{padding:"9px 11px",fontSize:14}}>{CTRY[t.country||"FR"]?.f}</td>
-                  <td style={{padding:"9px 11px"}}>
-                    <div style={{fontWeight:600,color:T.bright,fontSize:12}}>{t.company_name}</div>
-                    <div style={{fontSize:9.5,color:T.dim}}>{t.isin}</div>
-                  </td>
+                  <td style={{padding:"9px 11px"}}><div style={{fontWeight:600,color:T.bright,fontSize:12}}>{t.company_name}</div><div style={{fontSize:9.5,color:T.dim}}>{t.isin}</div></td>
                   <td style={{padding:"9px 11px",fontSize:11.5}}>{t.insider}</td>
                   <td style={{padding:"9px 11px",color:T.dim,fontSize:10}}>{t.role}</td>
-                  <td style={{padding:"9px 11px",textAlign:"right",fontFamily:T.mono,color:T.dim,fontSize:11}}>\u20AC{t.price?.toFixed(2)}</td>
+                  <td style={{padding:"9px 11px",textAlign:"right",fontFamily:T.mono,color:T.dim,fontSize:11}}>€{t.price?.toFixed(2)}</td>
                   <td style={{padding:"9px 11px",textAlign:"right",fontFamily:T.mono,color:T.text,fontSize:11}}>{t.quantity?.toLocaleString("fr-FR")}</td>
                   <td style={{padding:"9px 11px",textAlign:"right",fontFamily:T.mono,fontWeight:700,color:t.amount>500000?T.green:t.amount>100000?T.yellow:T.text}}>{fmt(t.amount)}</td>
-                  <td style={{padding:"9px 11px",textAlign:"center"}}>{t.reference_url && <a href={t.reference_url} target="_blank" rel="noopener" style={{color:T.gold,fontSize:11,textDecoration:"none"}}>\u{1F517}</a>}</td>
+                  <td style={{padding:"9px 11px",textAlign:"center"}}>{t.reference_url && <a href={t.reference_url} target="_blank" rel="noopener" style={{color:T.gold,fontSize:11,textDecoration:"none"}}>🔗</a>}</td>
                 </tr>;
               })}
             </tbody>
           </table>
         </div>
         {transactions.length > 200 && <div style={{padding:"9px 14px",borderTop:"1px solid "+T.border,fontSize:10.5,color:T.dim,textAlign:"center"}}>
-          Affichage des 200 premi\u00e8res {"\u00b7"} {transactions.length} transactions au total
+          Affichage des 200 premières · {transactions.length} transactions au total
         </div>}
       </div>}
 
       {tab === "method" && <div style={{background:T.card,borderRadius:10,border:"1px solid "+T.border,padding:20}}>
-        <h2 style={{margin:"0 0 14px",fontSize:16,fontWeight:800,color:T.bright}}>{"\u{1F9EE}"} M\u00e9thodologie</h2>
+        <h2 style={{margin:"0 0 14px",fontSize:16,fontWeight:800,color:T.bright}}>🧮 Méthodologie</h2>
         <div style={{padding:"14px 18px",background:T.goldBg,borderRadius:9,border:"1px solid "+T.gold+"20",marginBottom:16,fontSize:12,color:T.gold,lineHeight:1.8}}>
-          <b>Principe :</b> l'achat d'initi\u00e9 EST le signal. La garde technique ({"\u00b1"}15 pts) sert \u00e0 confirmer ou alerter {"\u2014"} elle ne peut jamais annuler un signal insider fort. Score final = max(insider, insider+tech).
+          <b>Principe :</b> l'achat d'initié EST le signal. La garde technique (±15 pts) sert à confirmer ou alerter — elle ne peut jamais annuler un signal insider fort. Score final = max(insider, insider+tech).
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:12}}>
           <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:15,border:"1px solid "+T.green+"15"}}>
-            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.green}}>{"\u{1F4CA}"} Score Insider (0-100)</h3>
+            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.green}}>📊 Score Insider (0-100)</h3>
             <div style={{fontSize:11.5,lineHeight:2}}>
               <div><b>Cluster (40 max)</b>: 5+ = 40, 3-4 = 32, 2 = 22, 1 = 12</div>
               <div><b>Volume (30 max)</b>: &gt;2M = 30, &gt;1M = 25, &gt;500k = 20</div>
-              <div><b>Qualit\u00e9 (20 max)</b>: CEO+multi = 20, CEO = 15</div>
-              <div><b>R\u00e9cence (10 max)</b>: 3+ r\u00e9cents = 10</div>
+              <div><b>Qualité (20 max)</b>: CEO+multi = 20, CEO = 15</div>
+              <div><b>Récence (10 max)</b>: 3+ récents = 10</div>
             </div>
           </div>
           <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:15,border:"1px solid "+T.purple+"15"}}>
-            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.purple}}>{"\u{1F6E1}\uFE0F"} Garde technique</h3>
+            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.purple}}>🛡️ Garde technique</h3>
             <div style={{fontSize:11.5,lineHeight:2}}>
               <div>RSI &lt;30: +8 (survendu)</div>
-              <div>RSI &gt;75: {"\u2212"}8 (surachet\u00e9)</div>
+              <div>RSI &gt;75: −8 (suracheté)</div>
               <div>Proche bas 52s: +5</div>
               <div>&gt; SMA200: +2</div>
             </div>
           </div>
           <div style={{background:"rgba(0,0,0,0.2)",borderRadius:9,padding:15,border:"1px solid "+T.blue+"15"}}>
-            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.blue}}>{"\u{1F4DA}"} Sources</h3>
+            <h3 style={{margin:"0 0 10px",fontSize:13,color:T.blue}}>📚 Sources</h3>
             <div style={{fontSize:11.5,lineHeight:2}}>
-              <div><b>AMF</b> via lestransactions.fr (FR)</div>
+              <div><b>AMF</b> via transactions-amf.swaoo.com (FR)</div>
               <div><b>Yahoo Finance</b> (prix, objectifs, RSI)</div>
-              <div>Fr\u00e9quence: quotidienne (19h lun-ven)</div>
-              <div>Sch\u00e9duler: GitHub Actions (gratuit)</div>
+              <div>Fréquence: quotidienne (19h lun-ven)</div>
+              <div>Scheduler: GitHub Actions (gratuit)</div>
             </div>
           </div>
         </div>
       </div>}
     </>}
 
-    <div style={{marginTop:16,textAlign:"center",fontSize:9,color:"#0c1018"}}>Usage personnel {"\u00b7"} Pas un conseil en investissement</div>
+    <div style={{marginTop:16,textAlign:"center",fontSize:9,color:"#0c1018"}}>Usage personnel · Pas un conseil en investissement</div>
   </div>);
 }
 
