@@ -1,117 +1,119 @@
 """
-Orchestrateur principal - Insider PEA
-Exécute tous les scrapers, fusionne les données, enrichit avec Yahoo Finance,
-calcule les scores, écrit un JSON consolidé.
-
-Usage: python run.py
+Orchestrateur principal - Insider PEA V3
+Récupère TOUTES les transactions AMF récentes (approche InsiderScreener),
+puis enrichit avec Yahoo Finance pour les tickers connus.
 """
 import json
 import sys
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from scrapers.france_amf import scrape_france
+from scrapers.france_amf import scrape_all_recent
 from scrapers.yahoo_finance import enrich_with_yahoo
 from scrapers.scoring import compute_insider_score, compute_tech_guard, compute_verdict
 
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-# Liste ISIN cibles (actions PEA principales).
-# Le nom doit matcher celui utilisé par swaoo.com dans ses URLs /societes/NOM/
-TARGETS = [
-    {"isin": "FR0000120271", "name": "TotalEnergies", "swaoo_name": "TOTALENERGIES", "ticker": "TTE.PA", "country": "FR", "sector": "Énergie"},
-    {"isin": "FR0000131104", "name": "BNP Paribas", "swaoo_name": "BNP+PARIBAS", "ticker": "BNP.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "FR0000120578", "name": "Sanofi", "swaoo_name": "SANOFI", "ticker": "SAN.PA", "country": "FR", "sector": "Santé"},
-    {"isin": "FR0000121014", "name": "LVMH", "swaoo_name": "LVMH", "ticker": "MC.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000121972", "name": "Schneider Electric", "swaoo_name": "SCHNEIDER+ELECTRIC", "ticker": "SU.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000120073", "name": "Air Liquide", "swaoo_name": "AIR+LIQUIDE", "ticker": "AI.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000125338", "name": "Capgemini", "swaoo_name": "CAPGEMINI", "ticker": "CAP.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000051807", "name": "Teleperformance", "swaoo_name": "TELEPERFORMANCE", "ticker": "TEP.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000120693", "name": "Pernod Ricard", "swaoo_name": "PERNOD+RICARD", "ticker": "RI.PA", "country": "FR", "sector": "Alimentation"},
-    {"isin": "FR0014003TT8", "name": "Dassault Systèmes", "swaoo_name": "DASSAULT+SYSTEMES", "ticker": "DSY.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000120321", "name": "L'Oréal", "swaoo_name": "L+OREAL", "ticker": "OR.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000052292", "name": "Hermès", "swaoo_name": "HERMES+INTERNATIONAL", "ticker": "RMS.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000121485", "name": "Kering", "swaoo_name": "KERING", "ticker": "KER.PA", "country": "FR", "sector": "Luxe"},
-    {"isin": "FR0000045072", "name": "Crédit Agricole", "swaoo_name": "CREDIT+AGRICOLE", "ticker": "ACA.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "FR0000120628", "name": "AXA", "swaoo_name": "AXA", "ticker": "CS.PA", "country": "FR", "sector": "Finance"},
-    {"isin": "NL0000235190", "name": "Airbus", "swaoo_name": "AIRBUS", "ticker": "AIR.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000073272", "name": "Safran", "swaoo_name": "SAFRAN", "ticker": "SAF.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR001400AJ45", "name": "Michelin", "swaoo_name": "MICHELIN", "ticker": "ML.PA", "country": "FR", "sector": "Automobile"},
-    {"isin": "FR0000125486", "name": "Vinci", "swaoo_name": "VINCI", "ticker": "DG.PA", "country": "FR", "sector": "Industrie"},
-    {"isin": "FR0000133308", "name": "Orange", "swaoo_name": "ORANGE", "ticker": "ORA.PA", "country": "FR", "sector": "Télécoms"},
-    {"isin": "FR0010220475", "name": "Publicis", "swaoo_name": "PUBLICIS+GROUPE", "ticker": "PUB.PA", "country": "FR", "sector": "Technologie"},
-    {"isin": "FR0000121667", "name": "EssilorLuxottica", "swaoo_name": "ESSILORLUXOTTICA", "ticker": "EL.PA", "country": "FR", "sector": "Santé"},
-    {"isin": "FR0000120172", "name": "Carrefour", "swaoo_name": "CARREFOUR", "ticker": "CA.PA", "country": "FR", "sector": "Alimentation"},
-    {"isin": "FR0000130577", "name": "Danone", "swaoo_name": "DANONE", "ticker": "BN.PA", "country": "FR", "sector": "Alimentation"},
-]
+# Mapping ISIN -> ticker Yahoo Finance (pour enrichissement optionnel)
+# Plus on en ajoute, plus on aura d'infos analystes dans le dashboard.
+# Pour les ISINs absents, seule la partie "achat d'initié" sera affichée (pas de potentiel analystes).
+ISIN_TO_TICKER = {
+    # CAC 40
+    "FR0000120271": "TTE.PA", "FR0000131104": "BNP.PA", "FR0000120578": "SAN.PA",
+    "FR0000121014": "MC.PA", "FR0000121972": "SU.PA", "FR0000120073": "AI.PA",
+    "FR0000125338": "CAP.PA", "FR0000051807": "TEP.PA", "FR0000120693": "RI.PA",
+    "FR0014003TT8": "DSY.PA", "FR0000120321": "OR.PA", "FR0000052292": "RMS.PA",
+    "FR0000121485": "KER.PA", "FR0000045072": "ACA.PA", "FR0000120628": "CS.PA",
+    "NL0000235190": "AIR.PA", "FR0000073272": "SAF.PA", "FR001400AJ45": "ML.PA",
+    "FR0000125486": "DG.PA", "FR0000133308": "ORA.PA", "FR0010220475": "PUB.PA",
+    "FR0000121667": "EL.PA", "FR0000120172": "CA.PA", "FR0000130577": "BN.PA",
+    # SBF 120 / Mid caps où les insiders achètent souvent
+    "FR0013230612": "TKO.PA",       # Tikehau Capital
+    "FR0013269123": "RUI.PA",       # Rubis
+    "FR0000054470": "UBI.PA",       # Ubisoft
+    "FR0010588079": "FREY.PA",      # Frey
+    "FR0010626500": "ARG.PA",       # Argan
+    "FR0000031122": "EIFF.PA",      # Société Tour Eiffel
+    "FR0000120164": "LNA.PA",       # LNA Santé
+    "FR0000031775": "VCT.PA",       # Vicat
+    "FR0000053381": "CGM.PA",       # Cegedim
+    "FR0000066755": "PIG.PA",       # Haulotte
+    "FR0013344173": "RBO.PA",       # Roche Bobois
+    "FR0000062739": "ABCA.PA",      # ABC Arbitrage
+    # International
+    "BE0974293251": "ABI.BR",       # AB InBev
+    "NL0011821202": "INGA.AS",      # ING
+    "NL0010273215": "ASML.AS",      # ASML
+}
 
 
 def main():
     print("=" * 60)
-    print(f"INSIDER PEA - Mise à jour {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"INSIDER PEA V3 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    days_back = 120
-    cutoff = datetime.now() - timedelta(days=days_back)
+    # On récupère 180 jours, le dashboard filtre ensuite par période
+    days_back = 180
 
-    # 1. Scraping France
-    print(f"\n[1/3] Scraping France AMF (fenêtre: {days_back} jours)...")
-    all_insider_tx = []
-    fr_targets = [t for t in TARGETS if t["country"] == "FR"]
-    
-    for i, target in enumerate(fr_targets, 1):
-        print(f"  [{i}/{len(fr_targets)}] {target['name']}... ", end="", flush=True)
+    # 1. Scraping global (toutes entreprises)
+    print(f"\n[1/3] Scraping AMF - {days_back} derniers jours (toutes entreprises)...")
+    all_transactions = scrape_all_recent(days_back=days_back, max_pages=40)
+    print(f"\nTotal : {len(all_transactions)} transactions récupérées")
+
+    purchases = [t for t in all_transactions if t["is_purchase"]]
+    sells = [t for t in all_transactions if t["is_sell"]]
+    print(f"  Achats : {len(purchases)}")
+    print(f"  Ventes : {len(sells)}")
+
+    # Extraire toutes les entreprises uniques
+    unique_companies = {}
+    for tx in all_transactions:
+        isin = tx["isin"]
+        if isin not in unique_companies:
+            unique_companies[isin] = {
+                "isin": isin,
+                "name": tx["company_name"],
+                "ticker": ISIN_TO_TICKER.get(isin),
+            }
+
+    print(f"  Entreprises uniques : {len(unique_companies)}")
+
+    # 2. Enrichissement Yahoo Finance (seulement pour les tickers connus)
+    print(f"\n[2/3] Enrichissement Yahoo Finance...")
+    companies_with_tickers = [c for c in unique_companies.values() if c["ticker"]]
+    print(f"  {len(companies_with_tickers)} entreprises avec ticker connu (sur {len(unique_companies)})")
+
+    company_data = dict(unique_companies)
+    for i, co in enumerate(companies_with_tickers, 1):
         try:
-            # Passer le nom swaoo pour utiliser /societes/NOM/
-            txs = scrape_france(
-                target["isin"],
-                cutoff,
-                company_name=target.get("swaoo_name") or target["name"]
-            )
-            for tx in txs:
-                tx["ticker"] = target["ticker"]
-                tx["country"] = target["country"]
-                tx["sector"] = target["sector"]
-                tx["company_name"] = target["name"]
-            all_insider_tx.extend(txs)
-            print(f"{len(txs)} tx")
-        except Exception as e:
-            print(f"ERREUR: {e}")
-
-    print(f"\nTotal transactions collectées: {len(all_insider_tx)}")
-
-    # Filtrer achats uniquement (nature = Acquisition) et montant > 10000€
-    purchases = [
-        tx for tx in all_insider_tx
-        if tx.get("is_purchase") and tx.get("amount", 0) >= 10000
-    ]
-    print(f"Achats significatifs (>10k€): {len(purchases)}")
-
-    # 2. Enrichissement Yahoo Finance
-    print("\n[2/3] Enrichissement Yahoo Finance...")
-    company_data = {}
-    for target in TARGETS:
-        key = target["isin"]
-        try:
-            quote = enrich_with_yahoo(target["ticker"])
+            quote = enrich_with_yahoo(co["ticker"])
             if quote:
-                company_data[key] = {**target, "quote": quote}
-                print(f"  ✓ {target['name']}: {quote.get('currentPrice', 'N/A')}")
+                company_data[co["isin"]]["quote"] = quote
+                price = quote.get("currentPrice", "N/A")
+                print(f"  [{i}/{len(companies_with_tickers)}] {co['name']}: {price}")
             else:
-                company_data[key] = {**target, "quote": None}
-                print(f"  ✗ {target['name']}: échec")
+                company_data[co["isin"]]["quote"] = None
         except Exception as e:
-            company_data[key] = {**target, "quote": None}
-            print(f"  ✗ {target['name']}: {e}")
+            company_data[co["isin"]]["quote"] = None
+            print(f"  [{i}/{len(companies_with_tickers)}] {co['name']}: erreur {str(e)[:60]}")
+        time.sleep(0.1)
 
-    # 3. Calcul des scores
-    print("\n[3/3] Calcul des scores...")
-    
+    # S'assurer que toutes les entreprises ont un champ quote
+    for isin in company_data:
+        if "quote" not in company_data[isin]:
+            company_data[isin]["quote"] = None
+
+    # 3. Calcul des scores (uniquement sur les ACHATS)
+    print(f"\n[3/3] Calcul des scores...")
+
     purchases_by_isin = {}
     for tx in purchases:
+        if tx["amount"] < 1000:  # Filtrer le bruit
+            continue
         isin = tx["isin"]
         if isin not in purchases_by_isin:
             purchases_by_isin[isin] = []
@@ -119,18 +121,8 @@ def main():
 
     recommendations = []
     for isin, txs in purchases_by_isin.items():
-        if isin not in company_data:
-            first_tx = txs[0]
-            company_data[isin] = {
-                "isin": isin,
-                "name": first_tx.get("company_name", "Inconnue"),
-                "ticker": None,
-                "country": first_tx.get("country", "FR"),
-                "sector": first_tx.get("sector", "Autre"),
-                "quote": None,
-            }
+        co = company_data.get(isin, {"isin": isin, "name": txs[0]["company_name"], "ticker": None, "quote": None})
 
-        co = company_data[isin]
         ins_score = compute_insider_score(txs)
         tech = compute_tech_guard(co.get("quote"))
         total = max(ins_score, ins_score + tech["adj"])
@@ -145,8 +137,6 @@ def main():
             "isin": isin,
             "name": co["name"],
             "ticker": co.get("ticker"),
-            "country": co["country"],
-            "sector": co["sector"],
             "insider_score": ins_score,
             "tech_adj": tech["adj"],
             "tech_detail": tech,
@@ -159,6 +149,7 @@ def main():
             "top_insider": top_tx["insider"],
             "top_role": top_tx.get("role", ""),
             "quote": co.get("quote"),
+            "transactions": sorted(txs, key=lambda t: t["date"], reverse=True),
         })
 
     recommendations.sort(key=lambda r: r["total_score"], reverse=True)
@@ -166,24 +157,32 @@ def main():
     output = {
         "generated_at": datetime.now().isoformat(),
         "transactions_count": len(purchases),
-        "companies_tracked": len(TARGETS),
+        "sells_count": len(sells),
+        "total_transactions": len(all_transactions),
+        "companies_with_buys": len(purchases_by_isin),
+        "days_covered": days_back,
         "recommendations": recommendations,
-        "transactions": sorted(purchases, key=lambda t: t["date"], reverse=True),
+        "transactions": all_transactions,
         "company_data": company_data,
     }
 
     output_path = DATA_DIR / "latest.json"
     output_path.write_text(json.dumps(output, ensure_ascii=False, indent=2, default=str))
     print(f"\n✅ Données écrites dans {output_path}")
-    print(f"   Recommandations: {len(recommendations)}")
-    print(f"   Transactions: {len(purchases)}")
+    print(f"   Transactions totales : {len(all_transactions)}")
+    print(f"   Achats : {len(purchases)}")
+    print(f"   Ventes : {len(sells)}")
+    print(f"   Entreprises avec achats : {len(purchases_by_isin)}")
 
     strong = [r for r in recommendations if r["total_score"] >= 85]
     buys = [r for r in recommendations if 65 <= r["total_score"] < 85]
-    print(f"   🟢 Achat Fort: {len(strong)}")
-    print(f"   🟡 Achat: {len(buys)}")
+    interesting = [r for r in recommendations if 45 <= r["total_score"] < 65]
+    print(f"   🟢 Achat Fort : {len(strong)}")
+    print(f"   🟡 Achat : {len(buys)}")
+    print(f"   🔵 Intéressant : {len(interesting)}")
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
