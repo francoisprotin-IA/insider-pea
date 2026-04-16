@@ -146,13 +146,13 @@ def _extract_transactions_from_soup(soup):
     return transactions
 
 
-def scrape_all_recent(days_back: int = 180, max_pages: int = 30) -> list[dict]:
+def scrape_all_recent(days_back: int = 180, max_pages: int = 80) -> list[dict]:
     """
     Récupère TOUTES les transactions AMF des N derniers jours.
     
     Args:
         days_back: Nombre de jours à récupérer (défaut 180 = 6 mois)
-        max_pages: Nombre max de pages à parcourir (15 tx/page, donc 30 pages = 450 tx max)
+        max_pages: Nombre max de pages à parcourir (15 tx/page, 80 pages = ~1200 tx)
     
     Returns:
         Liste de transactions triées par date décroissante
@@ -204,8 +204,8 @@ def scrape_all_recent(days_back: int = 180, max_pages: int = 30) -> list[dict]:
         # Si la page entière est hors fenêtre, on compte les pages consécutives
         if len(in_window) == 0:
             consecutive_old_pages += 1
-            if consecutive_old_pages >= 2:
-                print(f"  Cutoff atteint, arrêt")
+            if consecutive_old_pages >= 5:
+                print(f"  5 pages consécutives hors fenêtre, arrêt")
                 break
         else:
             consecutive_old_pages = 0
